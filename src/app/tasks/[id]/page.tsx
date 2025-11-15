@@ -342,23 +342,29 @@ export default function TaskDetailPage({
                     </div>
                   )}
 
-                  {latestRun.outputJson?.result && (
+                  {latestRun.outputJson && (
                     <details className="mt-3">
                       <summary className="cursor-pointer text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                        View Result ({Array.isArray(latestRun.outputJson.result) ? latestRun.outputJson.result.length : 1} items)
+                        View Result {latestRun.outputJson.result && Array.isArray(latestRun.outputJson.result) && `(${latestRun.outputJson.result.length} items)`}
                       </summary>
                       <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
-                        {Array.isArray(latestRun.outputJson.result) ? (
-                          <ul className="space-y-2">
-                            {latestRun.outputJson.result.map((item: string, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2">
-                                <span className="text-indigo-600 mt-1">•</span>
-                                <span className="text-slate-800 text-sm">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
+                        {latestRun.outputJson.result ? (
+                          Array.isArray(latestRun.outputJson.result) ? (
+                            <ul className="space-y-2">
+                              {latestRun.outputJson.result.map((item: string, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-indigo-600 mt-1">•</span>
+                                  <span className="text-slate-800 text-sm">{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-slate-800">{latestRun.outputJson.result}</p>
+                          )
                         ) : (
-                          <p className="text-sm text-slate-800">{latestRun.outputJson.result}</p>
+                          <pre className="text-xs text-slate-600 whitespace-pre-wrap">
+                            {JSON.stringify(latestRun.outputJson, null, 2)}
+                          </pre>
                         )}
                       </div>
                     </details>
@@ -461,23 +467,29 @@ export default function TaskDetailPage({
                     </div>
                   )}
 
-                  {run.outputJson?.result && (
+                  {run.outputJson && (
                     <details className="mt-3">
                       <summary className="cursor-pointer text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                        View Result ({Array.isArray(run.outputJson.result) ? run.outputJson.result.length : 1} items)
+                        View Result {run.outputJson.result && Array.isArray(run.outputJson.result) && `(${run.outputJson.result.length} items)`}
                       </summary>
                       <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mt-2">
-                        {Array.isArray(run.outputJson.result) ? (
-                          <ul className="space-y-2">
-                            {run.outputJson.result.map((item: string, idx: number) => (
-                              <li key={idx} className="flex items-start gap-2">
-                                <span className="text-indigo-600 mt-1">•</span>
-                                <span className="text-slate-800 text-sm">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
+                        {run.outputJson.result ? (
+                          Array.isArray(run.outputJson.result) ? (
+                            <ul className="space-y-2">
+                              {run.outputJson.result.map((item: string, idx: number) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-indigo-600 mt-1">•</span>
+                                  <span className="text-slate-800 text-sm">{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-slate-800">{run.outputJson.result}</p>
+                          )
                         ) : (
-                          <p className="text-sm text-slate-800">{run.outputJson.result}</p>
+                          <pre className="text-xs text-slate-600 whitespace-pre-wrap">
+                            {JSON.stringify(run.outputJson, null, 2)}
+                          </pre>
                         )}
                       </div>
                     </details>
