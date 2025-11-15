@@ -14,6 +14,7 @@
     "browser-use-sdk": "^2.0.6",
     "cron-parser": "^5.4.0",
     "dotenv": "^17.2.3",
+    "lucide-react": "^0.553.0",
     "next": "^15.0.0",
     "prisma": "^6.19.0",
     "react": "^19.0.0",
