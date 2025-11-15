@@ -23,7 +23,6 @@ export function isDueNow(
     // If next run is within withinMinutes, consider it due
     return timeDiff <= withinMinutes * 60 * 1000;
   } catch (error) {
-    console.error("Invalid cron expression:", cronExpression, error);
     return false;
   }
 }
@@ -38,7 +37,6 @@ export function getNextRunTime(cronExpression: string): Date | null {
     const interval = CronParser.parse(cronExpression);
     return interval.next().toDate();
   } catch (error) {
-    console.error("Invalid cron expression:", cronExpression, error);
     return null;
   }
 }

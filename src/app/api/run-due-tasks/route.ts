@@ -35,8 +35,6 @@ export async function POST(request: NextRequest) {
       task.cronSchedule && isDueNow(task.cronSchedule, now)
     );
 
-    console.log(`Found ${dueTasks.length} due tasks to run`);
-
     // Process each due task
     const results = await Promise.allSettled(
       dueTasks.map(async (task) => {
@@ -51,7 +49,7 @@ export async function POST(request: NextRequest) {
 
         try {
           // Run the browser task
-          const result = await runBrowserTask(task.description, true);
+          const result = await runBrowserTask(task.description, true, task.targetSite);
 
           // Update the task run with results
           await db.taskRun.update({
@@ -87,7 +85,6 @@ export async function POST(request: NextRequest) {
       results: results.map((r) => r.status === "fulfilled" ? r.value : { error: r.reason }),
     });
   } catch (error: any) {
-    console.error("Error running due tasks:", error);
     return NextResponse.json(
       { error: error?.message ?? "Failed to run due tasks" },
       { status: 500 }
@@ -123,8 +120,6 @@ export async function GET(request: NextRequest) {
       task.cronSchedule && isDueNow(task.cronSchedule, now)
     );
 
-    console.log(`[GitHub Actions] Found ${dueTasks.length} due tasks to run`);
-
     // Process each due task
     const results = await Promise.allSettled(
       dueTasks.map(async (task) => {
@@ -139,7 +134,7 @@ export async function GET(request: NextRequest) {
 
         try {
           // Run the browser task
-          const result = await runBrowserTask(task.description, true);
+          const result = await runBrowserTask(task.description, true, task.targetSite);
 
           // Update the task run with results
           await db.taskRun.update({
@@ -176,7 +171,6 @@ export async function GET(request: NextRequest) {
       results: results.map((r) => r.status === "fulfilled" ? r.value : { error: r.reason }),
     });
   } catch (error: any) {
-    console.error("Error running due tasks:", error);
     return NextResponse.json(
       { error: error?.message ?? "Failed to run due tasks" },
       { status: 500 }

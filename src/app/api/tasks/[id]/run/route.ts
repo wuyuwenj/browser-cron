@@ -28,35 +28,43 @@ export async function POST(
       },
     });
 
-    // Run the browser task (async)
-    runBrowserTask(task.description, true)
-      .then(async (result) => {
-        await db.taskRun.update({
-          where: { id: taskRun.id },
-          data: {
-            status: result.status === "completed" ? "success" : "failed",
-            finishedAt: new Date(),
-            outputJson: result.result || null,
-            errorMsg: result.error || null,
-            logs: result.logs?.join("\n") || null,
-          },
-        });
-      })
-      .catch(async (error) => {
-        await db.taskRun.update({
-          where: { id: taskRun.id },
-          data: {
-            status: "failed",
-            finishedAt: new Date(),
-            errorMsg: error?.message ?? "Unknown error",
-          },
-        });
+    try {
+      // Run the browser task and wait for completion
+      const result = await runBrowserTask(task.description, true, task.targetSite);
+
+      // Update the task run with results
+      const updatedTaskRun = await db.taskRun.update({
+        where: { id: taskRun.id },
+        data: {
+          status: result.status === "completed" ? "success" : "failed",
+          finishedAt: new Date(),
+          outputJson: result.result || null,
+          errorMsg: result.error || null,
+          logs: result.logs?.join("\n") || null,
+        },
       });
 
-    return NextResponse.json({
-      taskRun,
-      message: "Task execution started",
-    });
+      return NextResponse.json({
+        taskRun: updatedTaskRun,
+        message: "Task completed",
+      });
+    } catch (error: any) {
+      // Update task run with error
+      const updatedTaskRun = await db.taskRun.update({
+        where: { id: taskRun.id },
+        data: {
+          status: "failed",
+          finishedAt: new Date(),
+          errorMsg: error?.message ?? "Unknown error",
+        },
+      });
+
+      return NextResponse.json({
+        taskRun: updatedTaskRun,
+        message: "Task failed",
+        error: error?.message ?? "Unknown error",
+      });
+    }
   } catch (error: any) {
     return NextResponse.json(
       { error: error?.message ?? "Failed to run task" },

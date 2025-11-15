@@ -29,8 +29,7 @@ export default function TasksPage() {
         setTasks(data.tasks || []);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Failed to fetch tasks:", error);
+      .catch(() => {
         setLoading(false);
       });
   }, []);

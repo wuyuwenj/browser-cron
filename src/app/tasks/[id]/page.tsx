@@ -8,6 +8,7 @@ interface TaskRun {
   status: string;
   startedAt: string;
   finishedAt: string | null;
+  outputJson: any;
   errorMsg: string | null;
   logs: string | null;
 }
@@ -40,8 +41,7 @@ export default function TaskDetailPage({
         setTask(data.task);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Failed to fetch task:", error);
+      .catch(() => {
         setLoading(false);
       });
   };
@@ -64,7 +64,7 @@ export default function TaskDetailPage({
       // Refresh task data to show new run
       setTimeout(fetchTask, 1000);
     } catch (error) {
-      console.error("Failed to run task:", error);
+      // Error handled silently
     } finally {
       setRunning(false);
     }
@@ -88,7 +88,7 @@ export default function TaskDetailPage({
         fetchTask();
       }
     } catch (error) {
-      console.error("Failed to toggle task:", error);
+      // Error handled silently
     }
   };
 
@@ -187,32 +187,33 @@ export default function TaskDetailPage({
               {task.runs.map((run) => (
                 <div key={run.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1.5 ${
                           run.status === "success"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                             : run.status === "failed"
-                            ? "bg-red-100 text-red-800"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                             : run.status === "running"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                         }`}
                       >
-                        {run.status}
+                        {run.status === "success" && "✓"}
+                        {run.status === "failed" && "✗"}
+                        {run.status === "running" && "⟳"}
+                        {run.status.charAt(0).toUpperCase() + run.status.slice(1)}
                       </span>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {new Date(run.startedAt).toLocaleString()}
                       </span>
                       {run.finishedAt && (
-                        <span className="text-sm text-gray-500">
-                          (
-                          {Math.round(
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Duration: {Math.round(
                             (new Date(run.finishedAt).getTime() -
                               new Date(run.startedAt).getTime()) /
                               1000
-                          )}
-                          s)
+                          )}s
                         </span>
                       )}
                     </div>
@@ -220,13 +221,36 @@ export default function TaskDetailPage({
 
                   {run.errorMsg && (
                     <div className="bg-red-50 border border-red-200 rounded p-3 mt-2">
+                      <p className="text-sm text-red-800 font-semibold">Error:</p>
                       <p className="text-sm text-red-800">{run.errorMsg}</p>
+                    </div>
+                  )}
+
+                  {run.outputJson && (
+                    <div className="mt-3">
+                      <h3 className="text-sm font-semibold mb-2">Result:</h3>
+                      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                        {run.outputJson.result && Array.isArray(run.outputJson.result) ? (
+                          <ul className="space-y-2">
+                            {run.outputJson.result.map((item: string, idx: number) => (
+                              <li key={idx} className="flex items-start gap-2">
+                                <span className="text-blue-600 dark:text-blue-400 mt-1">•</span>
+                                <span className="text-gray-800 dark:text-gray-200">{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <pre className="text-xs overflow-x-auto whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                            {JSON.stringify(run.outputJson, null, 2)}
+                          </pre>
+                        )}
+                      </div>
                     </div>
                   )}
 
                   {run.logs && (
                     <details className="mt-2">
-                      <summary className="cursor-pointer text-sm text-blue-600 hover:underline">
+                      <summary className="cursor-pointer text-sm text-gray-600 hover:underline font-medium">
                         View Logs
                       </summary>
                       <pre className="bg-gray-900 text-gray-100 p-3 rounded mt-2 text-xs overflow-x-auto">

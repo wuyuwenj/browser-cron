@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CronSchedulePicker from "@/components/CronSchedulePicker";
 
 export default function NewTaskPage() {
   const router = useRouter();
@@ -92,39 +93,33 @@ export default function NewTaskPage() {
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Target Site *
+              Starting URL *
             </label>
             <input
-              type="text"
+              type="url"
               required
               value={formData.targetSite}
               onChange={(e) =>
                 setFormData({ ...formData, targetSite: e.target.value })
               }
               className="w-full border rounded-lg px-4 py-2"
-              placeholder="e.g., stripe, amazon, linkedin"
+              placeholder="e.g., https://stripe.com/login, https://amazon.com"
             />
+            <p className="text-sm text-gray-500 mt-1">
+              The URL where the browser automation will start
+            </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Cron Schedule (Optional)
+            <label className="block text-sm font-medium mb-4">
+              Schedule (Optional)
             </label>
-            <input
-              type="text"
+            <CronSchedulePicker
               value={formData.cronSchedule}
-              onChange={(e) =>
-                setFormData({ ...formData, cronSchedule: e.target.value })
+              onChange={(cronExpression) =>
+                setFormData({ ...formData, cronSchedule: cronExpression })
               }
-              className="w-full border rounded-lg px-4 py-2"
-              placeholder="e.g., 0 9 * * MON (Every Monday at 9am)"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Leave empty for manual execution only. Examples:
-              <br />• <code>0 9 * * *</code> - Daily at 9am
-              <br />• <code>0 9 * * MON</code> - Every Monday at 9am
-              <br />• <code>0 0 1 * *</code> - First day of every month
-            </p>
           </div>
 
           <div className="flex gap-4">
