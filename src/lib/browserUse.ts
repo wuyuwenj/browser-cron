@@ -22,24 +22,47 @@ const DefaultTaskOutput = z.object({
   result: z.array(z.string()),
 });
 
+// Output schema with notification evaluation
+const TaskOutputWithNotification = z.object({
+  result: z.array(z.string()),
+  shouldNotify: z.boolean(),
+  notificationReason: z.string().optional(),
+});
+
 /**
  * Run a browser automation task using Browser Use Cloud
  * @param taskDescription Natural language description of the task
  * @param waitForCompletion Whether to wait for task completion (default: true)
  * @param startUrl Optional starting URL for the browser
+ * @param notificationCriteria Optional AI-evaluated notification criteria
  * @returns Task result with status and output
  */
 export async function runBrowserTask(
   taskDescription: string,
   waitForCompletion: boolean = true,
-  startUrl?: string
+  startUrl?: string,
+  notificationCriteria?: string
 ): Promise<BrowserTaskResult> {
   try {
+    // Build the task prompt with optional notification criteria
+    let fullTaskDescription = taskDescription;
+
+    if (notificationCriteria) {
+      fullTaskDescription += `\n\nIMPORTANT NOTIFICATION EVALUATION:
+After completing the task above, evaluate this notification condition:
+"${notificationCriteria}"
+
+Based on what you found during the task, determine if this condition is TRUE or FALSE.
+- Set shouldNotify to true if the condition is met
+- Set shouldNotify to false if the condition is not met
+- In notificationReason, briefly explain why (e.g., "$49 flight found for March 15" or "No flights under $50 found")`;
+    }
+
     // Create the task using the correct SDK method with structured output
     const task = await client.tasks.createTask({
-      task: taskDescription,
+      task: fullTaskDescription,
       startUrl: startUrl || null,
-      schema: DefaultTaskOutput,
+      schema: notificationCriteria ? TaskOutputWithNotification : DefaultTaskOutput,
     });
 
     if (!waitForCompletion) {

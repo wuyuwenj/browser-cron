@@ -1,6 +1,6 @@
-# Browser Automation Platform
+# BrowserCron
 
-AI-powered browser automation platform built with Next.js and Browser Use Cloud. Schedule and run web automation tasks using natural language.
+Schedule AI agents to browse the web for you. Automate any website with natural language and cron scheduling - powered by Browser Use Cloud.
 
 ## Features
 

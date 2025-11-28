@@ -13,28 +13,91 @@ datasource db {
   url       = env("DATABASE_URL")
 }
 
+enum Plan {
+  FREE
+  PRO
+  PREMIUM
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tasks     Task[]
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  emailVerified        DateTime?
+  name                 String?
+  image                String?
+  plan                 Plan      @default(FREE)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  subscriptionStatus   String?   // active, canceled, past_due, trialing
+  currentPeriodEnd     DateTime?
+
+  // Notification preferences
+  emailNotifications   Boolean   @default(true)
+  usageLimitAlerts     Boolean   @default(true)
+  weeklyDigest         Boolean   @default(false)
+
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  accounts             Account[]
+  sessions             Session[]
+  tasks                Task[]
+  notificationLogs     NotificationLog[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Task {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  description String
-  targetSite  String
-  cronSchedule String?
-  nextRunAt   DateTime?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  runs        TaskRun[]
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  description          String
+  targetSite           String
+  cronSchedule         String?
+  nextRunAt            DateTime?
+  isActive             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  runs                 TaskRun[]
+  notificationSettings NotificationSettings?
 
   @@index([userId])
   @@index([nextRunAt])
@@ -53,4 +116,46 @@ model TaskRun {
 
   @@index([taskId])
   @@index([status])
+}
+
+model NotificationSettings {
+  id              String   @id @default(cuid())
+  taskId          String   @unique
+  task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  // Basic notifications
+  notifyOnSuccess Boolean  @default(false)
+  notifyOnFailure Boolean  @default(true)
+
+  // Email settings
+  email           String
+  frequency       String   @default("immediate") // immediate, daily, weekly
+
+  // AI-powered notification criteria (preferred method)
+  notificationCriteria String? @db.Text // Natural language criteria for AI evaluation
+
+  // DEPRECATED: Use notificationCriteria instead (kept for backward compatibility)
+  customRules     Json?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([taskId])
+}
+
+model NotificationLog {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId   String?
+  type     String   // task_success, task_failure, usage_limit, payment_failed, etc.
+  email    String
+  subject  String
+  sentAt   DateTime @default(now())
+  status   String   // sent, failed, queued
+  errorMsg String?
+
+  @@index([userId])
+  @@index([taskId])
+  @@index([sentAt])
 }

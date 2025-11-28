@@ -24,6 +24,7 @@ export default function CronSchedulePicker({ value, onChange }: CronSchedulePick
   const [yearMinute, setYearMinute] = useState(0);
   const [customCron, setCustomCron] = useState("");
   const [nextExecutions, setNextExecutions] = useState<Date[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize from existing value
   useEffect(() => {
@@ -65,7 +66,8 @@ export default function CronSchedulePicker({ value, onChange }: CronSchedulePick
         setCustomCron(value);
       }
     }
-  }, [value]);
+    setIsInitialized(true);
+  }, []);
 
   // Generate cron expression based on current settings
   const generateCronExpression = (): string => {
@@ -89,10 +91,11 @@ export default function CronSchedulePicker({ value, onChange }: CronSchedulePick
 
   // Update parent when settings change
   useEffect(() => {
+    if (!isInitialized) return;
     const cron = generateCronExpression();
     onChange(cron);
     calculateNextExecutions(cron);
-  }, [scheduleType, minuteInterval, dayHour, dayMinute, monthDay, monthHour, monthMinute, yearDay, yearMonth, yearHour, yearMinute, customCron]);
+  }, [scheduleType, minuteInterval, dayHour, dayMinute, monthDay, monthHour, monthMinute, yearDay, yearMonth, yearHour, yearMinute, customCron, isInitialized]);
 
   const calculateNextExecutions = (cronExpression: string) => {
     if (!cronExpression) {
@@ -324,7 +327,7 @@ export default function CronSchedulePicker({ value, onChange }: CronSchedulePick
         </div>
 
         {scheduleType === "custom" && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             <input
               type="text"
               value={customCron}
@@ -332,9 +335,79 @@ export default function CronSchedulePicker({ value, onChange }: CronSchedulePick
               placeholder="0 9 * * MON"
               className="w-full border rounded-lg px-4 py-2"
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500">
               Enter a cron expression (e.g., <code>0 9 * * MON</code> for every Monday at 9am)
             </p>
+
+            {/* Cron Cheatsheet */}
+            <div className="bg-muted/50 border rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold text-sm">Cron Expression Cheatsheet</h4>
+
+              <div className="space-y-2 text-sm">
+                <div className="font-mono text-xs bg-background border rounded px-2 py-1">
+                  ┌───────────── minute (0 - 59)
+                  <br />│ ┌───────────── hour (0 - 23)
+                  <br />│ │ ┌───────────── day of month (1 - 31)
+                  <br />│ │ │ ┌───────────── month (1 - 12)
+                  <br />│ │ │ │ ┌───────────── day of week (0 - 6, Sun-Sat)
+                  <br />│ │ │ │ │
+                  <br />* * * * *
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 9 * * *</code>
+                    <span className="text-xs text-muted-foreground">Every day at 9:00 AM</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">*/30 * * * *</code>
+                    <span className="text-xs text-muted-foreground">Every 30 minutes</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 */6 * * *</code>
+                    <span className="text-xs text-muted-foreground">Every 6 hours</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 9 * * MON</code>
+                    <span className="text-xs text-muted-foreground">Every Monday at 9:00 AM</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 0 1 * *</code>
+                    <span className="text-xs text-muted-foreground">First day of every month at midnight</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 9 * * 1-5</code>
+                    <span className="text-xs text-muted-foreground">Weekdays at 9:00 AM</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <code className="font-mono text-xs bg-background border rounded px-2 py-0.5 flex-shrink-0">0 0 * * 0</code>
+                    <span className="text-xs text-muted-foreground">Every Sunday at midnight</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <p className="text-xs text-muted-foreground font-semibold mb-1">Special characters:</p>
+                  <div className="space-y-0.5">
+                    <div className="flex gap-2 text-xs">
+                      <code className="font-mono bg-background border rounded px-1">*</code>
+                      <span className="text-muted-foreground">Any value</span>
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <code className="font-mono bg-background border rounded px-1">,</code>
+                      <span className="text-muted-foreground">Value list separator (e.g., 1,3,5)</span>
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <code className="font-mono bg-background border rounded px-1">-</code>
+                      <span className="text-muted-foreground">Range of values (e.g., 1-5)</span>
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <code className="font-mono bg-background border rounded px-1">/</code>
+                      <span className="text-muted-foreground">Step values (e.g., */15)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </fieldset>

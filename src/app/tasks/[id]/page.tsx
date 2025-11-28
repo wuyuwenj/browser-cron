@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import CronSchedulePicker from "@/components/CronSchedulePicker";
 
 interface TaskRun {
   id: string;
@@ -548,19 +549,15 @@ export default function TaskDetailPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Cron Schedule (optional)
+              <label className="block text-sm font-medium text-slate-700 mb-3">
+                Schedule <span className="text-slate-500 font-normal">(optional)</span>
               </label>
-              <input
-                type="text"
+              <CronSchedulePicker
                 value={editForm.cronSchedule}
-                onChange={(e) => setEditForm({ ...editForm, cronSchedule: e.target.value })}
-                placeholder="e.g., 0 9 * * * (every day at 9 AM)"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(cronExpression) =>
+                  setEditForm({ ...editForm, cronSchedule: cronExpression })
+                }
               />
-              <p className="text-xs text-slate-500 mt-1">
-                Leave empty for manual execution only
-              </p>
             </div>
             <div className="pt-4">
               <button
